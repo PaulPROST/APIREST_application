@@ -1,14 +1,13 @@
 package usecase
 
 import (
-	"context"
 	"pricesAPI/internal/infrastructure"
 	"time"
 )
 
-type GetPriceCmd func(ctx context.Context, applicationDate time.Time, ProductID int64, StringID int64) (requestResponse, error)
+type GetPriceCmd func(applicationDate time.Time, ProductID int64, StringID int64) (RequestResponse, error)
 
-type requestResponse struct {
+type RequestResponse struct {
 	StartDate time.Time `json:"startDate"`
 	EndDate   time.Time `json:"endDate"`
 	BrandID   int64     `json:"stringID"`
@@ -19,11 +18,11 @@ type requestResponse struct {
 
 // GetPrice returns a function that implements the business logic for the get price endpoint
 func GetPrice(inMemorydatabase *infrastructure.InMemoryDatabase) GetPriceCmd {
-	return func(ctx context.Context, applicationDate time.Time, ProductID int64, BrandID int64) (requestResponse, error) {
+	return func(applicationDate time.Time, ProductID int64, BrandID int64) (RequestResponse, error) {
 		// Get the price from the database
 		price, err := inMemorydatabase.GetPrice(applicationDate, ProductID, BrandID)
 		if err != nil {
-			return requestResponse{}, err
+			return RequestResponse{}, err
 		}
 
 		// Get the base price from the database to calculate the rate
@@ -33,7 +32,7 @@ func GetPrice(inMemorydatabase *infrastructure.InMemoryDatabase) GetPriceCmd {
 			rate = (price.Price - basePrice.Price) / basePrice.Price * 100
 		}
 
-		return requestResponse{
+		return RequestResponse{
 			StartDate: price.StartDate,
 			EndDate:   price.EndDate,
 			BrandID:   BrandID,

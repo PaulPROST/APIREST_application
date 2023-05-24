@@ -7,6 +7,7 @@ import (
 
 var ErrPriceNotFound = errors.New("no price has been found")
 
+// Price represents the price entity for database
 type Price struct {
 	BrandID     int64     `json:"brand_id"`
 	StartDate   time.Time `json:"start_date"`
