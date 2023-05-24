@@ -3,12 +3,14 @@ package main
 import (
 	"log"
 	"pricesAPI/internal/infrastructure"
+	"pricesAPI/internal/transport/http"
+	"pricesAPI/internal/usecase"
 
 	"github.com/gin-gonic/gin"
 )
 
 func initRoute(router *gin.Engine, inMemorydatabase *infrastructure.InMemoryDatabase) {
-	// router.GET("/price", )
+	router.GET("/price", http.GetPrice(usecase.GetPrice(inMemorydatabase)))
 }
 
 func main() {
