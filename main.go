@@ -16,6 +16,7 @@ func initRoute(router *gin.Engine, inMemorydatabase *infrastructure.InMemoryData
 func main() {
 	// Create an instance of the in-memory database
 	inMemorydatabase := infrastructure.NewInMemoryDatabase()
+	inMemorydatabase.InitializeDatabase()
 
 	router := gin.Default()
 

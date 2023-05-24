@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"pricesAPI/domain"
@@ -10,31 +11,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type requestParameters struct {
-	ApplicationDate time.Time `json:"applicationDate"`
-	BrandID         int64     `json:"brandID"`
-	ProductID       int64     `json:"productID"`
-}
-
 // HTTP handler for the get price endpoint
 func GetPrice(cmd usecase.GetPriceCmd) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req requestParameters
-		if err := c.ShouldBind(&req); err != nil {
-			c.Status(http.StatusBadRequest)
+		date := c.Query("date")
+		brandID, err := strconv.ParseInt(c.Query("brandID"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid brandID. Please provide a valid integer value."})
 			return
 		}
-		_, err := cmd(c.Request.Context(), req.ApplicationDate, req.ProductID, req.BrandID)
+		productID, err := strconv.ParseInt(c.Query("productID"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid productID. Please provide a valid integer value."})
+			return
+		}
+
+		// Parse the date parameter
+		parsedDate, err := time.Parse("2006-01-02-15.04.00", date)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format. Please use YYYY-MM-DD."})
+			return
+		}
+
+		price, err := cmd(c.Request.Context(), parsedDate, productID, brandID)
 		if err != nil {
 			switch err {
 			case domain.ErrPriceNotFound:
-				c.Status(http.StatusNotFound)
+				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 				return
 			default:
 				c.Status(http.StatusInternalServerError)
 				return
 			}
 		}
-		c.JSON(http.StatusOK, gin.H{})
+		c.JSON(http.StatusOK, gin.H{
+			"price": price,
+		})
 	}
 }
